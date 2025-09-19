@@ -5,6 +5,8 @@ import Footer from "./components/Footer";
 import Header from "./components/Header";
 import Checkout from "./pages/Checkout";
 import SearchResults from "./components/SearchResults";
+import CategoryPage from "./pages/CategoryPage";
+
 
 
 
@@ -51,6 +53,7 @@ function App() {
           <Route path="/track-order" element={<TrackOrder />} />
           <Route path="/cart" element={<Cart />} />
       <Route path="/search" element={<SearchResults />} />
+      <Route path="/:category" element={<CategoryPage />} />
           
 
         </Routes>

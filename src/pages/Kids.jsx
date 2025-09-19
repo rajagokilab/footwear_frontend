@@ -1,7 +1,8 @@
+// src/pages/Kids.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import ProductCard from "../components/ProductCard";
 import { motion } from "framer-motion";
+import ProductCard from "../components/ProductCard";
+import { fetchProductsByCategory } from "../api";
 
 export default function Kids() {
   const [allProducts, setAllProducts] = useState([]);
@@ -14,27 +15,24 @@ export default function Kids() {
     color: "",
     sort: "Featured",
   });
-  const [showFilters, setShowFilters] = useState(false); // toggle all filters
-  const [openDropdown, setOpenDropdown] = useState(null); // track which dropdown is open
+  const [showFilters, setShowFilters] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
 
-  // Fetch products
+  // Fetch kids products
   useEffect(() => {
-    axios
-      .get("http://127.0.0.1:8000/api/products/?category=kids")
-      .then((res) => {
-        const productsWithFullImage = res.data.map((product) => ({
-          ...product,
-          image: product.image
-            ? product.image.startsWith("http")
-              ? product.image
-              : `http://127.0.0.1:8000${product.image}`
-            : null,
-        }));
-        setAllProducts(productsWithFullImage);
-        setProducts(productsWithFullImage);
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchProductsByCategory("kids");
+        setAllProducts(data);
+        setProducts(data);
+      } catch (err) {
+        console.error("Failed to fetch kids products:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
   // Filter + Sort
@@ -57,9 +55,7 @@ export default function Kids() {
       );
 
     if (filters.color)
-      filtered = filtered.filter(
-        (p) => p.colors && p.colors.includes(filters.color)
-      );
+      filtered = filtered.filter((p) => p.colors && p.colors.includes(filters.color));
 
     switch (filters.sort) {
       case "Price:Low-High":
@@ -70,8 +66,7 @@ export default function Kids() {
         break;
       case "New Arrivals":
         filtered.sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
         break;
       case "Overall Rating":
@@ -84,6 +79,19 @@ export default function Kids() {
     setProducts(filtered);
   }, [filters, allProducts]);
 
+  const handleFilterChange = (type, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [type]: prev[type] === value ? "" : value,
+    }));
+  };
+
+  // Extract unique filter values
+  const uniqueStyles = Array.from(new Set(allProducts.map((p) => p.style).filter(Boolean)));
+  const uniqueSizes = Array.from(new Set(allProducts.map((p) => p.size).filter(Boolean)));
+  const uniqueBrands = Array.from(new Set(allProducts.map((p) => p.brand).filter(Boolean)));
+  const uniqueColors = Array.from(new Set(allProducts.flatMap((p) => p.colors)));
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
@@ -93,24 +101,10 @@ export default function Kids() {
     visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
   };
 
-  const handleFilterChange = (type, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [type]: prev[type] === value ? "" : value,
-    }));
-  };
-
-  // Extract unique values dynamically for filters
-  const uniqueStyles = Array.from(new Set(allProducts.map((p) => p.style).filter(Boolean)));
-  const uniqueSizes = Array.from(new Set(allProducts.map((p) => p.size).filter(Boolean)));
-  const uniqueBrands = Array.from(new Set(allProducts.map((p) => p.brand).filter(Boolean)));
-  const uniqueColors = Array.from(new Set(allProducts.flatMap((p) => p.colors)));
-
   return (
     <div className="p-6 relative">
-      {/* Top Filter Bar */}
+      {/* Filter Bar */}
       <div className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-lg shadow mb-6">
-        {/* Filters toggle */}
         <button
           onClick={() => setShowFilters(!showFilters)}
           className="px-4 py-2 bg-gray-200 rounded flex items-center gap-2 shadow"
@@ -119,7 +113,6 @@ export default function Kids() {
           <span>{showFilters ? "←" : "➜"}</span>
         </button>
 
-        {/* Filters dropdowns (visible only if showFilters=true) */}
         {showFilters && (
           <>
             {/* Style Dropdown */}
@@ -236,7 +229,7 @@ export default function Kids() {
           </>
         )}
 
-        {/* Sort Dropdown (always visible on right) */}
+        {/* Sort Dropdown */}
         <div className="relative ml-auto">
           <button
             onClick={() => setOpenDropdown(openDropdown === "sort" ? null : "sort")}
@@ -272,9 +265,7 @@ export default function Kids() {
         animate="visible"
       >
         {loading && <p className="text-center col-span-full">Loading products...</p>}
-        {!loading && products.length === 0 && (
-          <p className="text-center col-span-full">No products found.</p>
-        )}
+        {!loading && products.length === 0 && <p className="text-center col-span-full">No products found.</p>}
         {!loading &&
           products.map((product) => (
             <motion.div key={product.id} variants={cardVariants}>

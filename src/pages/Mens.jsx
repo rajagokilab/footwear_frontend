@@ -1,8 +1,8 @@
-// Men.jsx
+// src/pages/Men.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import ProductCard from "../components/ProductCard";
 import { motion } from "framer-motion";
+import ProductCard from "../components/ProductCard";
+import { fetchProductsByCategory } from "../api";
 
 export default function Men() {
   const [allProducts, setAllProducts] = useState([]);
@@ -18,27 +18,24 @@ export default function Men() {
   const [showFilters, setShowFilters] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
 
-  // Fetch products for men category
+  // Fetch men products
   useEffect(() => {
-    axios
-      .get("http://127.0.0.1:8000/api/products/?category=mens")
-      .then((res) => {
-        const productsWithFullImage = res.data.map((product) => ({
-          ...product,
-          image: product.image
-            ? product.image.startsWith("http")
-              ? product.image
-              : `http://127.0.0.1:8000${product.image}`
-            : null,
-        }));
-        setAllProducts(productsWithFullImage);
-        setProducts(productsWithFullImage);
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchProductsByCategory("mens");
+        setAllProducts(data);
+        setProducts(data);
+      } catch (err) {
+        console.error("Failed to fetch men products:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
-  // Filter + Sort logic
+  // Filter + Sort
   useEffect(() => {
     let filtered = [...allProducts];
 
@@ -69,8 +66,7 @@ export default function Men() {
         break;
       case "New Arrivals":
         filtered.sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
         break;
       case "Overall Rating":
@@ -83,6 +79,19 @@ export default function Men() {
     setProducts(filtered);
   }, [filters, allProducts]);
 
+  const handleFilterChange = (type, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [type]: prev[type] === value ? "" : value,
+    }));
+  };
+
+  // Extract unique filter values
+  const uniqueStyles = Array.from(new Set(allProducts.map((p) => p.style).filter(Boolean)));
+  const uniqueSizes = Array.from(new Set(allProducts.map((p) => p.size).filter(Boolean)));
+  const uniqueBrands = Array.from(new Set(allProducts.map((p) => p.brand).filter(Boolean)));
+  const uniqueColors = Array.from(new Set(allProducts.flatMap((p) => p.colors)));
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
@@ -92,30 +101,9 @@ export default function Men() {
     visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
   };
 
-  const handleFilterChange = (type, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [type]: prev[type] === value ? "" : value,
-    }));
-  };
-
-  // Extract unique filter values
-  const uniqueStyles = Array.from(
-    new Set(allProducts.map((p) => p.style).filter(Boolean))
-  );
-  const uniqueSizes = Array.from(
-    new Set(allProducts.map((p) => p.size).filter(Boolean))
-  );
-  const uniqueBrands = Array.from(
-    new Set(allProducts.map((p) => p.brand).filter(Boolean))
-  );
-  const uniqueColors = Array.from(
-    new Set(allProducts.flatMap((p) => p.colors))
-  );
-
   return (
     <div className="p-6 relative">
-      {/* Top Filter Bar */}
+      {/* Filter Bar */}
       <div className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-lg shadow mb-6">
         <button
           onClick={() => setShowFilters(!showFilters)}
@@ -131,9 +119,7 @@ export default function Men() {
             {uniqueStyles.length > 0 && (
               <div className="relative">
                 <button
-                  onClick={() =>
-                    setOpenDropdown(openDropdown === "style" ? null : "style")
-                  }
+                  onClick={() => setOpenDropdown(openDropdown === "style" ? null : "style")}
                   className="px-4 py-2 border rounded bg-white shadow flex items-center gap-2"
                 >
                   Style ▼
@@ -160,9 +146,7 @@ export default function Men() {
             {uniqueSizes.length > 0 && (
               <div className="relative">
                 <button
-                  onClick={() =>
-                    setOpenDropdown(openDropdown === "size" ? null : "size")
-                  }
+                  onClick={() => setOpenDropdown(openDropdown === "size" ? null : "size")}
                   className="px-4 py-2 border rounded bg-white shadow flex items-center gap-2"
                 >
                   Size ▼
@@ -189,9 +173,7 @@ export default function Men() {
             {uniqueBrands.length > 0 && (
               <div className="relative">
                 <button
-                  onClick={() =>
-                    setOpenDropdown(openDropdown === "brand" ? null : "brand")
-                  }
+                  onClick={() => setOpenDropdown(openDropdown === "brand" ? null : "brand")}
                   className="px-4 py-2 border rounded bg-white shadow flex items-center gap-2"
                 >
                   Brand ▼
@@ -218,9 +200,7 @@ export default function Men() {
             {uniqueColors.length > 0 && (
               <div className="relative">
                 <button
-                  onClick={() =>
-                    setOpenDropdown(openDropdown === "color" ? null : "color")
-                  }
+                  onClick={() => setOpenDropdown(openDropdown === "color" ? null : "color")}
                   className="px-4 py-2 border rounded bg-white shadow flex items-center gap-2"
                 >
                   Color ▼
@@ -235,9 +215,7 @@ export default function Men() {
                       >
                         <span
                           className={`w-5 h-5 rounded-full border-2 ${
-                            filters.color === color
-                              ? "border-blue-500"
-                              : "border-gray-300"
+                            filters.color === color ? "border-blue-500" : "border-gray-300"
                           }`}
                           style={{ backgroundColor: color }}
                         ></span>
@@ -254,22 +232,14 @@ export default function Men() {
         {/* Sort Dropdown */}
         <div className="relative ml-auto">
           <button
-            onClick={() =>
-              setOpenDropdown(openDropdown === "sort" ? null : "sort")
-            }
+            onClick={() => setOpenDropdown(openDropdown === "sort" ? null : "sort")}
             className="px-4 py-2 bg-green-600 text-white rounded flex items-center gap-2"
           >
             Sort ▼
           </button>
           {openDropdown === "sort" && (
             <div className="absolute right-0 mt-2 bg-white border shadow-lg rounded z-20 w-40 max-h-60 overflow-auto">
-              {[
-                "Featured",
-                "New Arrivals",
-                "Price:Low-High",
-                "Price:High-Low",
-                "Overall Rating",
-              ].map((sort) => (
+              {["Featured", "New Arrivals", "Price:Low-High", "Price:High-Low", "Overall Rating"].map((sort) => (
                 <div
                   key={sort}
                   className={`p-2 cursor-pointer hover:bg-gray-100 ${
@@ -293,9 +263,7 @@ export default function Men() {
         animate="visible"
       >
         {loading && <p className="text-center col-span-full">Loading products...</p>}
-        {!loading && products.length === 0 && (
-          <p className="text-center col-span-full">No products found.</p>
-        )}
+        {!loading && products.length === 0 && <p className="text-center col-span-full">No products found.</p>}
         {!loading &&
           products.map((product) => (
             <motion.div key={product.id} variants={cardVariants}>

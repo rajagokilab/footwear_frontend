@@ -1,8 +1,8 @@
 // src/pages/Women.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import ProductCard from "../components/ProductCard";
 import { motion } from "framer-motion";
+import ProductCard from "../components/ProductCard";
+import { fetchProductsByCategory } from "../api";
 
 export default function Women() {
   const [allProducts, setAllProducts] = useState([]);
@@ -20,22 +20,19 @@ export default function Women() {
 
   // Fetch products for womens category
   useEffect(() => {
-    axios
-      .get("http://127.0.0.1:8000/api/products/?category=womens")
-      .then((res) => {
-        const productsWithFullImage = res.data.map((product) => ({
-          ...product,
-          image: product.image
-            ? product.image.startsWith("http")
-              ? product.image
-              : `http://127.0.0.1:8000${product.image}`
-            : null,
-        }));
-        setAllProducts(productsWithFullImage);
-        setProducts(productsWithFullImage);
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchProductsByCategory("womens");
+        setAllProducts(data);
+        setProducts(data);
+      } catch (err) {
+        console.error("Failed to fetch women's products:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
   // Filter + Sort logic
@@ -58,9 +55,7 @@ export default function Women() {
       );
 
     if (filters.color)
-      filtered = filtered.filter(
-        (p) => p.colors && p.colors.includes(filters.color)
-      );
+      filtered = filtered.filter((p) => p.colors && p.colors.includes(filters.color));
 
     switch (filters.sort) {
       case "Price:Low-High":
@@ -71,8 +66,7 @@ export default function Women() {
         break;
       case "New Arrivals":
         filtered.sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
         break;
       case "Overall Rating":
@@ -92,7 +86,7 @@ export default function Women() {
     }));
   };
 
-  // Extract unique filter values
+  // Extract unique filter values dynamically
   const uniqueStyles = Array.from(new Set(allProducts.map((p) => p.style).filter(Boolean)));
   const uniqueSizes = Array.from(new Set(allProducts.map((p) => p.size).filter(Boolean)));
   const uniqueBrands = Array.from(new Set(allProducts.map((p) => p.brand).filter(Boolean)));
@@ -121,7 +115,7 @@ export default function Women() {
 
         {showFilters && (
           <>
-            {/* Style */}
+            {/* Style Dropdown */}
             {uniqueStyles.length > 0 && (
               <div className="relative">
                 <button
@@ -148,7 +142,7 @@ export default function Women() {
               </div>
             )}
 
-            {/* Size */}
+            {/* Size Dropdown */}
             {uniqueSizes.length > 0 && (
               <div className="relative">
                 <button
@@ -175,7 +169,7 @@ export default function Women() {
               </div>
             )}
 
-            {/* Brand */}
+            {/* Brand Dropdown */}
             {uniqueBrands.length > 0 && (
               <div className="relative">
                 <button
@@ -202,7 +196,7 @@ export default function Women() {
               </div>
             )}
 
-            {/* Color */}
+            {/* Color Dropdown */}
             {uniqueColors.length > 0 && (
               <div className="relative">
                 <button
@@ -235,7 +229,7 @@ export default function Women() {
           </>
         )}
 
-        {/* Sort */}
+        {/* Sort Dropdown */}
         <div className="relative ml-auto">
           <button
             onClick={() => setOpenDropdown(openDropdown === "sort" ? null : "sort")}

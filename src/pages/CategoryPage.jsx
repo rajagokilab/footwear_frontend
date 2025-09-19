@@ -1,9 +1,12 @@
+// src/pages/CategoryPage.jsx
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import { motion } from "framer-motion";
 import { fetchProductsByCategory } from "../api";
 
-export default function Brands() {
+export default function CategoryPage() {
+  const { category } = useParams(); // grabs "mens", "womens", "kids", etc.
   const [allProducts, setAllProducts] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,16 +22,16 @@ export default function Brands() {
 
   useEffect(() => {
     setLoading(true);
-    fetchProductsByCategory("brands")
+    fetchProductsByCategory(category)
       .then((data) => {
         setAllProducts(data);
         setProducts(data);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [category]);
 
-  // Filter + Sort
+  // Filter + Sort logic
   useEffect(() => {
     let filtered = [...allProducts];
 
@@ -93,7 +96,7 @@ export default function Brands() {
 
   return (
     <div className="p-6 relative">
-      {/* Top Filter Bar */}
+      {/* Filters */}
       <div className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-lg shadow mb-6">
         <button
           onClick={() => setShowFilters(!showFilters)}

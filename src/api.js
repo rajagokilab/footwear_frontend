@@ -26,7 +26,7 @@ export const apiPost = async (endpoint, data) => {
   } catch (err) {
     if (err.response?.status === 401 && refreshToken) {
       // Refresh token
-      const res = await axios.post(`${API_URL}/refresh/`, { refresh: refreshToken });
+      const res = await axios.post(`${API_URL}/api/auth/token/refresh/`, { refresh: refreshToken });
       accessToken = res.data.access;
       localStorage.setItem("access_token", accessToken);
       return await makeRequest(accessToken); // Retry original request
@@ -53,6 +53,20 @@ export const searchProducts = async (query) => {
     params: { q: query },
   });
   return res.data;
+};
+
+// Fetch products by category (mens, womens, kids, brands)
+export const fetchProductsByCategory = async (category) => {
+  const res = await fetch(`${API_URL}/api/products/?category=${category}`);
+  if (!res.ok) throw new Error("Failed to fetch products");
+  const data = await res.json();
+  return data.map((product) => ({
+    ...product,
+    image:
+      product.image && !product.image.startsWith("http")
+        ? `${API_URL}${product.image}`
+        : product.image,
+  }));
 };
 
 // -------------------
