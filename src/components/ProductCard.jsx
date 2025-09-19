@@ -1,6 +1,8 @@
 // src/components/ProductCard.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../api"; // make sure API_URL is exported
+
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
@@ -44,11 +46,11 @@ const addToCart = () => {
     return stars;
   };
 
-  const imageUrl = product.image
-    ? product.image.startsWith("http")
-      ? product.image
-      : `http://127.0.0.1:8000${product.image}`
-    : "https://placehold.co/400x400/e5e5e5/white?text=No+Image";
+const imageUrl = product.image
+  ? product.image.startsWith("http")
+    ? product.image
+    : `${API_URL}${product.image}`
+  : "https://placehold.co/400x400/e5e5e5/white?text=No+Image";
 
   return (
     <div className="product-card bg-white p-4 rounded-xl flex flex-col items-center text-center cursor-pointer shadow-md hover:shadow-lg transition">
