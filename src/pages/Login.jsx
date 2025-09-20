@@ -12,25 +12,26 @@ const AuthForm = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const API_URL = "http://localhost:8000/api/auth/";
+ const API_URL = import.meta.env.VITE_API_URL;
 
   // ---------------- Login ----------------
-  const loginUser = async (email, password) => {
-    const res = await axios.post(`${API_URL}login/`, { email, password });
-    localStorage.setItem("access_token", res.data.access);
-    localStorage.setItem("refresh_token", res.data.refresh);
-    return res.data;
-  };
+ // Login
+const loginUser = async (email, password) => {
+  const res = await axios.post(`${API_URL}/api/auth/login/`, { email, password });
+  localStorage.setItem("access_token", res.data.access);
+  localStorage.setItem("refresh_token", res.data.refresh);
+  return res.data;
+};
 
   // ---------------- Register ----------------
-  const registerUser = async (username, email, password) => {
-    const res = await axios.post(`${API_URL}register/`, {
-      username,
-      email,
-      password,
-      password2: password, // confirm password
-    });
-    return res.data;
+ const registerUser = async (username, email, password) => {
+  const res = await axios.post(`${API_URL}/api/auth/register/`, {
+    username,
+    email,
+    password,
+    password2: password, // confirm password
+  });
+  return res.data;
   };
 
   // ---------------- Form Submit ----------------
